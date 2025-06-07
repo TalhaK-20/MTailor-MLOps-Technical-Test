@@ -1,7 +1,6 @@
 import numpy as np
 import onnxruntime as ort
 from PIL import Image
-import torch
 from torchvision import transforms
 from typing import Tuple, List, Optional
 import os
@@ -15,7 +14,6 @@ logger = logging.getLogger(__name__)
 class ImagePreprocessor:
 
     def __init__(self):
-        # ImageNet normalization values
         self.mean = [0.485, 0.456, 0.406]  # RGB means
         self.std = [0.229, 0.224, 0.225]  # RGB standard deviations
         self.target_size = (224, 224)
@@ -37,10 +35,13 @@ class ImagePreprocessor:
                 if not os.path.exists(image_input):
                     raise FileNotFoundError(f"Image file not found: {image_input}")
                 image = Image.open(image_input)
+
             elif isinstance(image_input, np.ndarray):
                 image = Image.fromarray(image_input)
+
             elif isinstance(image_input, Image.Image):
                 image = image_input
+
             else:
                 raise ValueError(f"Unsupported image input type: {type(image_input)}")
 
@@ -48,10 +49,8 @@ class ImagePreprocessor:
                 image = image.convert('RGB')
                 logger.debug(f"Converted image from {image.mode} to RGB")
 
-            # Apply preprocessing pipeline
             processed_tensor = self.transform(image)
 
-            # Convert to numpy and add batch dimension
             processed_array = processed_tensor.numpy()
             processed_array = np.expand_dims(processed_array, axis=0)
 
@@ -215,11 +214,9 @@ class ONNXModelHandler:
         }
 
 
-# Example usage and testing
 if __name__ == "__main__":
     try:
-        # Initialize model handler
-        model_handler = ONNXModelHandler("model.onnx")
+        model_handler = ONNXModelHandler("../onnx/model.onnx")
 
         # Print model info
         print("Model Information:")

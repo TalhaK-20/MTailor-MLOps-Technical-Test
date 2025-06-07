@@ -107,7 +107,7 @@ def main():
     converter.convert_to_onnx()
     if args.validate:
         converter.validate_onnx_model(args.test_image)
-        print("\n🎉 Conversion completed successfully!")
+        print("\nConversion completed successfully!")
         print(f"ONNX model saved at: {args.onnx_output}")
 
 

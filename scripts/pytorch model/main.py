@@ -4,19 +4,17 @@ import base64
 import logging
 from typing import Dict, Any
 from PIL import Image
-
 from model import ONNXModelHandler
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
 model_handler = None
 
 
 def initialize_model():
     global model_handler
     try:
-        model_path = "model.onnx"
+        model_path = "../onnx/model.onnx"
         if not os.path.exists(model_path):
             raise FileNotFoundError(f"Model file not found: {model_path}")
 
@@ -51,12 +49,14 @@ def predict(payload: Dict[str, Any]) -> Dict[str, Any]:
         if 'image_base64' in payload:
             image_path = handle_base64_image(payload['image_base64'])
             temp_file_created = True
+
         elif 'image_url' in payload:
-            # Handle image URL (download and save temporarily)
             image_path = handle_image_url(payload['image_url'])
             temp_file_created = True
+
         elif 'image_path' in payload:
             image_path = payload['image_path']
+
         else:
             return {
                 "error": "No image provided. Use 'image_base64', 'image_url', or 'image_path'",
@@ -69,16 +69,14 @@ def predict(payload: Dict[str, Any]) -> Dict[str, Any]:
                 "status": "error"
             }
 
-        # Make prediction
         predicted_class, confidence, probabilities = model_handler.predict(image_path)
 
         if temp_file_created and os.path.exists(image_path):
             try:
                 os.remove(image_path)
             except:
-                pass  # Ignore cleanup errors
+                pass
 
-        # Prepare response
         response = {
             "predicted_class": predicted_class,
             "confidence": float(confidence),
@@ -115,21 +113,16 @@ def predict(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 def handle_base64_image(base64_string: str) -> str:
     try:
-        # Remove data URL prefix if present
         if base64_string.startswith('data:image'):
             base64_string = base64_string.split(',')[1]
 
-        # Decode base64
         image_data = base64.b64decode(base64_string)
 
-        # Create PIL Image
         image = Image.open(io.BytesIO(image_data))
 
-        # Convert to RGB if necessary
         if image.mode != 'RGB':
             image = image.convert('RGB')
 
-        # Save to temporary file
         temp_path = "/tmp/temp_image.jpg"
         image.save(temp_path, 'JPEG')
 
@@ -143,7 +136,6 @@ def handle_image_url(image_url: str) -> str:
     try:
         import requests
 
-        # Download image
         response = requests.get(image_url, timeout=30)
         response.raise_for_status()
 
@@ -154,7 +146,6 @@ def handle_image_url(image_url: str) -> str:
         if image.mode != 'RGB':
             image = image.convert('RGB')
 
-        # Save to temporary file
         temp_path = "/tmp/temp_image_url.jpg"
         image.save(temp_path, 'JPEG')
 
@@ -165,7 +156,6 @@ def handle_image_url(image_url: str) -> str:
 
 
 def health_check() -> Dict[str, Any]:
-
     global model_handler
 
     try:
@@ -202,7 +192,6 @@ def health_check() -> Dict[str, Any]:
 
 
 def get_model_info() -> Dict[str, Any]:
-
     global model_handler
 
     if model_handler is None:

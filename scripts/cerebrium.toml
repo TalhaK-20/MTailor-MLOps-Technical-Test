@@ -21,4 +21,3 @@ scaling_metric = "concurrency_utilization"
 scaling_target = 100
 scaling_buffer = 0
 roll_out_duration_seconds = 0
-
